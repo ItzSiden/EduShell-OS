@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Browser</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #1e1e1e;
+            color: #f0f0f0;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+        }
+        
+        .app-header {
+            background-color: #2d2d30;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #3e3e42;
+            -webkit-app-region: drag;
+        }
+        
+        .app-title {
+            font-size: 14px;
+            font-weight: 500;
+            margin-right: auto;
+        }
+        
+        .window-controls {
+            display: flex;
+            gap: 8px;
+            -webkit-app-region: no-drag;
+        }
+        
+        .window-control {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .window-control.close {
+            background-color: #ff5f56;
+        }
+        
+        .window-control.minimize {
+            background-color: #ffbd2e;
+        }
+        
+        .window-control.maximize {
+            background-color: #27c93f;
+        }
+        
+        .browser-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            flex: 1;
+        }
+        
+        .browser-toolbar {
+            display: flex;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .toolbar-group {
+            display: flex;
+            margin-right: 16px;
+        }
+        
+        .toolbar-btn {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 4px;
+            transition: background 0.2s;
+        }
+        
+        .toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .toolbar-btn:active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .toolbar-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .toolbar-btn:disabled:hover {
+            background: transparent;
+        }
+        
+        .toolbar-btn.spinning i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .address-bar {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 0 12px;
+            height: 32px;
+        }
+        
+        .address-bar input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            outline: none;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+        
+        .address-bar input::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .browser-content {
+            flex: 1;
+            background: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .browser-iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            display: block;
+        }
+        
+        .loading-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 30, 30, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .loading-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #007acc;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        .loading-text {
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+        
+        .loading-url {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 80%;
+            text-align: center;
+            word-break: break-all;
+        }
+        
+        .error-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 30, 30, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            z-index: 10;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .error-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+        
+        .error-icon {
+            font-size: 48px;
+            color: #ff5f56;
+            margin-bottom: 20px;
+        }
+        
+        .error-title {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .error-message {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+            max-width: 80%;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .error-url {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            max-width: 80%;
+            text-align: center;
+            word-break: break-all;
+            margin-bottom: 20px;
+        }
+        
+        .open-new-tab-btn {
+            background: #007acc;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        .open-new-tab-btn:hover {
+            background: #0066b3;
+        }
+        
+        .status-bar {
+            background-color: #007acc;
+            color: white;
+            padding: 4px 16px;
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #3e3e42;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            transform: translateY(100px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        
+        .bookmark-bar {
+            display: flex;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 4px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 8px;
+            overflow-x: auto;
+        }
+        
+        .bookmark {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .bookmark:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .security-indicator {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .secure {
+            color: #4caf50;
+        }
+        
+        .insecure {
+            color: #ff9800;
+        }
+        
+        .progress-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 2px;
+            background: #007acc;
+            width: 0%;
+            transition: width 0.3s ease;
+            z-index: 5;
+        }
+        
+        .view-mode-toggle {
+            display: flex;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .view-mode-btn {
+            padding: 6px 10px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+        
+        .view-mode-btn.active {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        
+        .view-mode-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="app-header">
+            <div class="app-title">
+                Web Browser
+                <span id="pageTitle">New Tab</span>
+            </div>
+            <div class="window-controls">
+                <div class="window-control minimize"></div>
+                <div class="window-control maximize"></div>
+                <div class="window-control close"></div>
+            </div>
+        </div>
+        
+        <div class="browser-container">
+            <div class="browser-toolbar">
+                <div class="toolbar-group">
+                    <button class="toolbar-btn" id="backBtn" title="Back" disabled>
+                        <i class="fas fa-arrow-left"></i>
+                    </button>
+                    <button class="toolbar-btn" id="forwardBtn" title="Forward" disabled>
+                        <i class="fas fa-arrow-right"></i>
+                    </button>
+                    <button class="toolbar-btn" id="refreshBtn" title="Refresh">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="toolbar-btn" id="homeBtn" title="Home">
+                        <i class="fas fa-home"></i>
+                    </button>
+                </div>
+                
+                <div class="address-bar">
+                    <div class="security-indicator" id="securityIndicator">
+                        <i class="fas fa-lock secure"></i>
+                    </div>
+                    <input type="text" id="addressInput" placeholder="Enter URL or search..." autocomplete="off">
+                </div>
+                
+                <div class="toolbar-group">
+                    <div class="view-mode-toggle">
+                        <button class="view-mode-btn active" id="iframeMode" title="Iframe Mode">Iframe</button>
+                        <button class="view-mode-btn" id="newTabMode" title="New Tab Mode">New Tab</button>
+                    </div>
+                    <button class="toolbar-btn" id="bookmarkBtn" title="Bookmark">
+                        <i class="fas fa-star"></i>
+                    </button>
+                    <button class="toolbar-btn" id="settingsBtn" title="Settings">
+                        <i class="fas fa-cog"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="bookmark-bar" id="bookmarkBar">
+                <div class="bookmark" data-url="https://www.wikipedia.org">Wikipedia</div>
+                <div class="bookmark" data-url="https://codepen.io">CodePen</div>
+                <div class="bookmark" data-url="https://jsfiddle.net">JSFiddle</div>
+                <div class="bookmark" data-url="https://developer.mozilla.org">MDN</div>
+            </div>
+            
+            <div class="browser-content">
+                <div class="progress-bar" id="progressBar"></div>
+                <div class="loading-overlay" id="loadingOverlay">
+                    <div class="spinner"></div>
+                    <div class="loading-text">Loading page...</div>
+                    <div class="loading-url" id="loadingUrl"></div>
+                </div>
+                <div class="error-overlay" id="errorOverlay">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="error-title">Failed to load this website</div>
+                    <div class="error-message">This website cannot be displayed in an iframe due to security restrictions.</div>
+                    <div class="error-url" id="errorUrl"></div>
+                    <button class="open-new-tab-btn" id="openNewTabBtn">Open in New Tab</button>
+                </div>
+                <iframe class="browser-iframe" id="browserFrame" src="about:blank"></iframe>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <div id="statusText">Ready</div>
+            <div id="connectionStatus">
+                <i class="fas fa-circle" style="color: #4caf50; font-size: 8px; margin-right: 5px;"></i>
+                Connected
+            </div>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const browserFrame = document.getElementById('browserFrame');
+            const addressInput = document.getElementById('addressInput');
+            const backBtn = document.getElementById('backBtn');
+            const forwardBtn = document.getElementById('forwardBtn');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const homeBtn = document.getElementById('homeBtn');
+            const bookmarkBtn = document.getElementById('bookmarkBtn');
+            const settingsBtn = document.getElementById('settingsBtn');
+            const pageTitle = document.getElementById('pageTitle');
+            const statusText = document.getElementById('statusText');
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const loadingUrl = document.getElementById('loadingUrl');
+            const errorOverlay = document.getElementById('errorOverlay');
+            const errorUrl = document.getElementById('errorUrl');
+            const openNewTabBtn = document.getElementById('openNewTabBtn');
+            const notification = document.getElementById('notification');
+            const securityIndicator = document.getElementById('securityIndicator');
+            const bookmarkBar = document.getElementById('bookmarkBar');
+            const progressBar = document.getElementById('progressBar');
+            const iframeMode = document.getElementById('iframeMode');
+            const newTabMode = document.getElementById('newTabMode');
+            
+            let history = [];
+            let historyIndex = -1;
+            let isLoading = false;
+            let currentUrl = '';
+            let viewMode = 'iframe'; // 'iframe' or 'newtab'
+            
+            const homePage = 'https://www.wikipedia.org';
+            
+            // Show notification
+            function showNotification(message) {
+                notification.textContent = message;
+                notification.classList.add('show');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                }, 3000);
+            }
+            
+            // Update navigation buttons
+            function updateNavigationButtons() {
+                backBtn.disabled = historyIndex <= 0;
+                forwardBtn.disabled = historyIndex >= history.length - 1;
+            }
+            
+            // Start loading
+            function startLoading(url) {
+                isLoading = true;
+                loadingOverlay.classList.add('active');
+                errorOverlay.classList.remove('active');
+                refreshBtn.classList.add('spinning');
+                loadingUrl.textContent = url;
+                statusText.textContent = 'Loading...';
+                progressBar.style.width = '0%';
+                
+                // Simulate progress
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    if (!isLoading) {
+                        clearInterval(progressInterval);
+                        return;
+                    }
+                    progress += Math.random() * 30;
+                    if (progress > 90) progress = 90;
+                    progressBar.style.width = progress + '%';
+                }, 300);
+                
+                // Set a timeout to detect if the page is taking too long to load
+                setTimeout(() => {
+                    if (isLoading) {
+                        showError(url);
+                    }
+                }, 10000); // 10 seconds timeout
+            }
+            
+            // Stop loading
+            function stopLoading() {
+                isLoading = false;
+                loadingOverlay.classList.remove('active');
+                refreshBtn.classList.remove('spinning');
+                progressBar.style.width = '100%';
+                setTimeout(() => {
+                    progressBar.style.width = '0%';
+                }, 300);
+            }
+            
+            // Show error
+            function showError(url) {
+                stopLoading();
+                errorOverlay.classList.add('active');
+                errorUrl.textContent = url;
+                statusText.textContent = 'Error loading page';
+                showNotification('Failed to load page in iframe');
+            }
+            
+            // Navigate to URL
+            function navigateToUrl(url) {
+                if (!url) return;
+                
+                // Process URL
+                let processedUrl = url.trim();
+                if (!processedUrl.startsWith('http://') && !processedUrl.startsWith('https://')) {
+                    if (processedUrl.includes('.') && !processedUrl.includes(' ')) {
+                        processedUrl = 'https://' + processedUrl;
+                    } else {
+                        // Search query
+                        processedUrl = 'https://www.google.com/search?q=' + encodeURIComponent(processedUrl);
+                    }
+                }
+                
+                currentUrl = processedUrl;
+                
+                // Update address bar
+                addressInput.value = processedUrl;
+                
+                // Update security indicator
+                if (processedUrl.startsWith('https://')) {
+                    securityIndicator.innerHTML = '<i class="fas fa-lock secure"></i>';
+                } else {
+                    securityIndicator.innerHTML = '<i class="fas fa-unlock insecure"></i>';
+                }
+                
+                // Handle based on view mode
+                if (viewMode === 'iframe') {
+                    // Start loading
+                    startLoading(processedUrl);
+                    
+                    // Load URL
+                    browserFrame.src = processedUrl;
+                } else {
+                    // Open in new tab
+                    window.open(processedUrl, '_blank');
+                    showNotification('Opening in new tab');
+                }
+                
+                // Add to history
+                if (historyIndex < history.length - 1) {
+                    history = history.slice(0, historyIndex + 1);
+                }
+                history.push(processedUrl);
+                historyIndex++;
+                
+                updateNavigationButtons();
+            }
+            
+            // iframe load event
+            browserFrame.addEventListener('load', function() {
+                if (viewMode === 'iframe') {
+                    stopLoading();
+                    try {
+                        const currentUrl = browserFrame.contentWindow.location.href;
+                        if (currentUrl && currentUrl !== 'about:blank') {
+                            statusText.textContent = currentUrl;
+                            pageTitle.textContent = new URL(currentUrl).hostname;
+                        }
+                    } catch (e) {
+                        // Cross-origin error, use address bar value
+                        statusText.textContent = addressInput.value;
+                        try {
+                            pageTitle.textContent = new URL(addressInput.value).hostname;
+                        } catch (e2) {
+                            pageTitle.textContent = 'Unknown Site';
+                        }
+                    }
+                    showNotification('Page loaded successfully');
+                }
+            });
+            
+            // iframe error event
+            browserFrame.addEventListener('error', function() {
+                if (viewMode === 'iframe') {
+                    showError(currentUrl);
+                }
+            });
+            
+            // Address input enter key
+            addressInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    navigateToUrl(addressInput.value);
+                }
+            });
+            
+            // Navigation buttons
+            backBtn.addEventListener('click', function() {
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    const url = history[historyIndex];
+                    addressInput.value = url;
+                    if (viewMode === 'iframe') {
+                        startLoading(url);
+                        browserFrame.src = url;
+                    }
+                    updateNavigationButtons();
+                    showNotification('Navigated back');
+                }
+            });
+            
+            forwardBtn.addEventListener('click', function() {
+                if (historyIndex < history.length - 1) {
+                    historyIndex++;
+                    const url = history[historyIndex];
+                    addressInput.value = url;
+                    if (viewMode === 'iframe') {
+                        startLoading(url);
+                        browserFrame.src = url;
+                    }
+                    updateNavigationButtons();
+                    showNotification('Navigated forward');
+                }
+            });
+            
+            refreshBtn.addEventListener('click', function() {
+                if (currentUrl && currentUrl !== 'about:blank') {
+                    if (viewMode === 'iframe') {
+                        startLoading(currentUrl);
+                        browserFrame.src = currentUrl;
+                        showNotification('Refreshing page...');
+                    } else {
+                        window.open(currentUrl, '_blank');
+                        showNotification('Opening in new tab');
+                    }
+                }
+            });
+            
+            homeBtn.addEventListener('click', function() {
+                navigateToUrl(homePage);
+                showNotification('Navigated home');
+            });
+            
+            bookmarkBtn.addEventListener('click', function() {
+                if (currentUrl && currentUrl !== 'about:blank') {
+                    try {
+                        const hostname = new URL(currentUrl).hostname;
+                        const bookmark = document.createElement('div');
+                        bookmark.className = 'bookmark';
+                        bookmark.textContent = hostname;
+                        bookmark.dataset.url = currentUrl;
+                        bookmark.addEventListener('click', function() {
+                            navigateToUrl(this.dataset.url);
+                        });
+                        bookmarkBar.appendChild(bookmark);
+                        showNotification(`Bookmarked ${hostname}`);
+                    } catch (e) {
+                        showNotification('Cannot bookmark this page');
+                    }
+                }
+            });
+            
+            settingsBtn.addEventListener('click', function() {
+                showNotification('Settings panel coming soon!');
+            });
+            
+            // Open in new tab button
+            openNewTabBtn.addEventListener('click', function() {
+                window.open(currentUrl, '_blank');
+                showNotification('Opening in new tab');
+            });
+            
+            // View mode toggle
+            iframeMode.addEventListener('click', function() {
+                viewMode = 'iframe';
+                iframeMode.classList.add('active');
+                newTabMode.classList.remove('active');
+                showNotification('Switched to iframe mode');
+            });
+            
+            newTabMode.addEventListener('click', function() {
+                viewMode = 'newtab';
+                newTabMode.classList.add('active');
+                iframeMode.classList.remove('active');
+                showNotification('Switched to new tab mode');
+            });
+            
+            // Bookmark clicks
+            document.querySelectorAll('.bookmark').forEach(bookmark => {
+                bookmark.addEventListener('click', function() {
+                    navigateToUrl(this.dataset.url);
+                });
+            });
+            
+            // Window controls
+            document.querySelector('.window-control.close').addEventListener('click', function() {
+                if (confirm('Are you sure you want to close the browser?')) {
+                    window.close();
+                }
+            });
+            
+            document.querySelector('.window-control.minimize').addEventListener('click', function() {
+                showNotification('Minimize not available in browser');
+            });
+            
+            document.querySelector('.window-control.maximize').addEventListener('click', function() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                    showNotification('Fullscreen mode');
+                } else {
+                    document.exitFullscreen();
+                    showNotification('Exited fullscreen');
+                }
+            });
+            
+            // Keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Alt + Left Arrow: Back
+                if (e.altKey && e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    backBtn.click();
+                }
+                
+                // Alt + Right Arrow: Forward
+                if (e.altKey && e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    forwardBtn.click();
+                }
+                
+                // F5: Refresh
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    refreshBtn.click();
+                }
+                
+                // Ctrl/Cmd + L: Focus address bar
+                if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+                    e.preventDefault();
+                    addressInput.focus();
+                    addressInput.select();
+                }
+                
+                // Ctrl/Cmd + R: Refresh
+                if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
+                    e.preventDefault();
+                    refreshBtn.click();
+                }
+            });
+            
+            // Initialize with home page
+            setTimeout(() => {
+                navigateToUrl(homePage);
+            }, 500);
+        });
+    </script>
+</body>
+</html>

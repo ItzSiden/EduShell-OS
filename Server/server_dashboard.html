@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Server Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    :root {
+      --bg:#0a0e1a; --panel:#0f141f; --muted:#8892a6; --accent:#00c853;
+      --accent-2:#00e676; --card-bg:#0d1117; --border:#1a2332;
+      --online:#4caf50; --offline:#f44336;
+    }
+    html,body {height:100%; margin:0; font-family: "Segoe UI", Tahoma, sans-serif; background:var(--bg); color:#e6eef6;}
+    
+    /* Header */
+    header {height:60px; display:flex; align-items:center; justify-content:space-between; padding:0 18px; background:#0d1117; border-bottom:2px solid var(--accent);}
+    
+    /* Main Container */
+    .container {display:flex; height:calc(100vh - 60px);}
+    
+    /* Left Sidebar Navigation */
+    .nav-sidebar {
+      width: 80px;
+      background: var(--panel);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 20px;
+      border-right: 1px solid var(--border);
+    }
+    .nav-item {
+      width: 50px;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 20px;
+      color: var(--muted);
+      font-size: 20px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+    }
+    .nav-item:hover {
+      background: rgba(0, 200, 83, 0.1);
+      color: var(--accent);
+    }
+    .nav-item.active {
+      background: rgba(0, 200, 83, 0.2);
+      color: var(--accent);
+    }
+    
+    /* Main Content Area */
+    .main {flex:1; display:flex; flex-direction:column; padding:12px; gap:10px}
+    .topbar {display:flex; align-items:center; gap:10px;}
+    .status {font-size:13px; color:var(--muted);}
+    .box {background:var(--card-bg); border:1px solid var(--border); border-radius:8px; padding:10px; overflow:auto; min-height:0;}
+    .log {font-family:monospace; font-size:12px; white-space:pre-wrap; color:#d7e7ef;}
+    .command-row {display:flex; gap:8px; margin-top:8px}
+    input[type="text"] {flex:1; padding:8px 10px; border-radius:6px; border:1px solid var(--border); background:var(--panel); color:#e6eef6; outline:none;}
+    button {padding:8px 12px; border-radius:6px; border:none; cursor:pointer; font-weight:700;}
+    .btn-send {background:var(--accent); color:#012; }
+    .btn-broadcast {background:var(--accent-2); color:#012;}
+    .btn-aux {background:var(--panel); color:var(--muted);}
+    
+    /* Client List Cards */
+    .client-card {
+      width: 100%;
+      height: 80px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      padding: 0 15px;
+      transition: all 0.3s ease;
+    }
+    .client-card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 10px rgba(0, 200, 83, 0.1);
+    }
+    .client-status {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      margin-right: 15px;
+    }
+    .client-status.online {
+      background: var(--online);
+      box-shadow: 0 0 8px var(--online);
+    }
+    .client-status.offline {
+      background: var(--offline);
+      box-shadow: 0 0 8px var(--offline);
+    }
+    .client-info {
+      flex: 1;
+    }
+    .client-name {
+      font-weight: 700;
+      font-size: 16px;
+      margin-bottom: 5px;
+    }
+    .client-meta {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .client-actions {
+      display: flex;
+      gap: 10px;
+    }
+    .client-action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--panel);
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .client-action-btn:hover {
+      color: white;
+    }
+    .client-action-btn.power:hover {
+      background: var(--offline);
+    }
+    .client-action-btn.restart:hover {
+      background: #ff9800;
+    }
+    .client-action-btn.sleep:hover {
+      background: #2196f3;
+    }
+    .client-action-btn.directory:hover {
+      background: #9c27b0;
+    }
+    
+    /* Panel Title */
+    .panel-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 15px;
+      color: var(--accent);
+    }
+    
+    /* View Container */
+    .view-container {
+      flex: 1;
+      display: none;
+      flex-direction: column;
+    }
+    .view-container.active {
+      display: flex;
+    }
+    
+    /* Empty State */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 300px;
+      color: var(--muted);
+    }
+    .empty-state i {
+      font-size: 48px;
+      margin-bottom: 16px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div style="display:flex;align-items:center; gap:12px;">
+      <strong>Server Dashboard</strong>
+      <span class="status" id="statusText">Connecting...</span>
+    </div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="btn-aux" id="clearAll">Clear Logs</button>
+      <button class="btn-aux" id="copyAll">Copy All</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="nav-sidebar">
+      <div class="nav-item active" data-view="home" title="Home">
+        <i class="fas fa-home"></i>
+      </div>
+      <div class="nav-item" data-view="logs" title="Logs">
+        <i class="fas fa-file-alt"></i>
+      </div>
+      <div class="nav-item" data-view="admin" title="Admin">
+        <i class="fas fa-user-shield"></i>
+      </div>
+      <div class="nav-item" data-view="account" title="Account">
+        <i class="fas fa-user"></i>
+      </div>
+      <div class="nav-item" data-view="logout" title="Logout">
+        <i class="fas fa-sign-out-alt"></i>
+      </div>
+    </div>
+
+    <div class="main">
+      <!-- Home View - Client Management -->
+      <div class="view-container active" id="home-view">
+        <div class="topbar">
+          <div style="flex:1;">
+            <strong>Client Management</strong>
+          </div>
+          <div class="status" id="connInfo"></div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div id="clientCards" style="margin-top:8px; display:flex; flex-direction:column; gap:8px;"></div>
+          <div id="noClientsMessage" class="empty-state" style="display:none;">
+            <i class="fas fa-desktop"></i>
+            <p>No clients connected</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logs View -->
+      <div class="view-container" id="logs-view">
+        <div class="topbar">
+          <div style="flex:1;">
+            <strong>Output Logs</strong>
+          </div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div id="output" class="log" style="height:100%; overflow:auto;">[Server output will appear here]</div>
+        </div>
+      </div>
+
+      <!-- Admin View - Command Sending -->
+      <div class="view-container" id="admin-view">
+        <div class="topbar">
+          <div style="flex:1;">
+            <strong>Command Center</strong>
+          </div>
+          <div class="status" id="selectedLabel">Selected: <span id="selectedClient">None</span></div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div style="font-weight:700; margin-bottom:6px;">Send Command</div>
+          <div style="font-size:12px; color:var(--muted); margin-bottom:8px;">Select a client from Home or broadcast to all.</div>
+          <div class="command-row">
+            <input id="commandInput" placeholder="e.g. dir, cd .., ipconfig" />
+            <button id="sendBtn" class="btn-send">Send</button>
+            <button id="broadcastBtn" class="btn-broadcast">Broadcast</button>
+          </div>
+          <div style="margin-top:20px;">
+            <div style="font-weight:700; margin-bottom:6px;">Recent Commands</div>
+            <div id="recentCommands" style="font-family:monospace; font-size:12px; color:var(--muted); max-height:200px; overflow-y:auto;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account View -->
+      <div class="view-container" id="account-view">
+        <div class="topbar">
+          <div style="flex:1;">
+            <strong>Account Settings</strong>
+          </div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div class="empty-state">
+            <i class="fas fa-user-cog"></i>
+            <p>Account settings coming soon</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Logout View -->
+      <div class="view-container" id="logout-view">
+        <div class="topbar">
+          <div style="flex:1;">
+            <strong>Logout</strong>
+          </div>
+        </div>
+        <div class="box" style="flex:1;">
+          <div class="empty-state">
+            <i class="fas fa-sign-out-alt"></i>
+            <p>Are you sure you want to logout?</p>
+            <button class="btn-send" style="margin-top:16px;">Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // Auto-detect host so you don't edit the file for local use
+  const host = location.hostname || "localhost";
+  const WS_URL = `ws://${host}:8765`;
+  const ws = new WebSocket(WS_URL);
+
+  const statusText = document.getElementById("statusText");
+  const clientCards = document.getElementById("clientCards");
+  const noClientsMessage = document.getElementById("noClientsMessage");
+  const output = document.getElementById("output");
+  const selectedLabel = document.getElementById("selectedLabel");
+  const selectedClientEl = document.getElementById("selectedClient");
+  const recentCommands = document.getElementById("recentCommands");
+
+  let clients = []; // list of ids
+  let selectedClient = null;
+  let perClientLogs = {}; // {id: "text..."}
+  let commandHistory = [];
+
+  function addOutputLine(line){
+    if(output.textContent.trim() === "[Server output will appear here]") output.textContent = "";
+    output.textContent += line + "\n";
+    output.scrollTop = output.scrollHeight;
+  }
+
+  function addCommandToHistory(command, target) {
+    const timestamp = new Date().toLocaleTimeString();
+    commandHistory.unshift(`[${timestamp}] ${target}: ${command}`);
+    if (commandHistory.length > 10) commandHistory.pop();
+    recentCommands.textContent = commandHistory.join('\n');
+  }
+
+  ws.onopen = () => {
+    statusText.textContent = "🟢 Connected to server";
+    // tell server "i'm a dashboard"
+    ws.send(JSON.stringify({ type: "dashboard_connect" }));
+  };
+
+  ws.onerror = (e) => {
+    statusText.textContent = "🔴 Connection error";
+    console.error("WebSocket error:", e);
+  };
+
+  ws.onclose = () => {
+    statusText.textContent = "🔴 Disconnected";
+  };
+
+  ws.onmessage = (evt) => {
+    try {
+      const data = JSON.parse(evt.data);
+      if(data.type === "status"){
+        clients = data.clients || [];
+        renderClientCards();
+      } else if(data.type === "result"){
+        const id = data.id || "unknown";
+        const out = data.output || "";
+        const line = `[${id}] > ${out}`;
+        // global output
+        addOutputLine(line);
+        // per-client
+        if(!perClientLogs[id]) perClientLogs[id] = "";
+        perClientLogs[id] += out + "\n";
+      } else {
+        console.log("Unknown message:", data);
+      }
+    } catch(err){
+      console.error("Invalid message:", evt.data, err);
+    }
+  };
+
+  function renderClientCards() {
+    clientCards.innerHTML = "";
+    
+    if(clients.length === 0) {
+      noClientsMessage.style.display = "flex";
+      return;
+    }
+    
+    noClientsMessage.style.display = "none";
+    
+    clients.forEach(id => {
+      const card = document.createElement("div");
+      card.className = "client-card";
+      
+      card.innerHTML = `
+        <div class="client-status online"></div>
+        <div class="client-info">
+          <div class="client-name">${id}</div>
+          <div class="client-meta">Online - Active now</div>
+        </div>
+        <div class="client-actions">
+          <div class="client-action-btn power" title="Power">
+            <i class="fas fa-power-off"></i>
+          </div>
+          <div class="client-action-btn directory" title="Directory">
+            <i class="fas fa-folder"></i>
+          </div>
+          <div class="client-action-btn restart" title="Restart">
+            <i class="fas fa-redo"></i>
+          </div>
+          <div class="client-action-btn sleep" title="Sleep">
+            <i class="fas fa-moon"></i>
+          </div>
+        </div>
+      `;
+      
+      // Add click event to select client
+      card.addEventListener('click', function(e) {
+        // Don't select if clicking on action buttons
+        if (!e.target.closest('.client-actions')) {
+          selectedClient = id;
+          selectedClientEl.textContent = id;
+        }
+      });
+      
+      // Add click events for action buttons
+      const powerBtn = card.querySelector('.power');
+      const directoryBtn = card.querySelector('.directory');
+      const restartBtn = card.querySelector('.restart');
+      const sleepBtn = card.querySelector('.sleep');
+      
+      powerBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sendCommand(id, "shutdown");
+      });
+      
+      directoryBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sendCommand(id, "dir");
+      });
+      
+      restartBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sendCommand(id, "restart");
+      });
+      
+      sleepBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        sendCommand(id, "sleep");
+      });
+      
+      clientCards.appendChild(card);
+    });
+  }
+
+  // Send command to server
+  function sendCommand(target, command){
+    if(!command || command.trim() === "") return alert("Enter a command");
+    ws.send(JSON.stringify({ type: "send_command", target: target, command: command }));
+    addOutputLine(`[Server] Sent "${command}" → ${target}`);
+    addCommandToHistory(command, target);
+  }
+
+  document.getElementById("sendBtn").onclick = () => {
+    if(!selectedClient) return alert("Select a client first");
+    const cmd = document.getElementById("commandInput").value.trim();
+    sendCommand(selectedClient, cmd);
+    document.getElementById("commandInput").value = "";
+  };
+
+  document.getElementById("broadcastBtn").onclick = () => {
+    const cmd = document.getElementById("commandInput").value.trim();
+    sendCommand("all", cmd);
+    document.getElementById("commandInput").value = "";
+  };
+
+  document.getElementById("clearAll").onclick = () => {
+    output.textContent = "";
+    perClientLogs = {};
+  };
+
+  document.getElementById("copyAll").onclick = () => {
+    navigator.clipboard.writeText(output.textContent).then(()=>alert("Copied logs"));
+  };
+
+  // Navigation handling
+  document.querySelectorAll('.nav-item').forEach(item => {
+    item.addEventListener('click', function() {
+      const viewName = this.getAttribute('data-view');
+      
+      // Update active nav item
+      document.querySelectorAll('.nav-item').forEach(navItem => {
+        navItem.classList.remove('active');
+      });
+      this.classList.add('active');
+      
+      // Update active view
+      document.querySelectorAll('.view-container').forEach(view => {
+        view.classList.remove('active');
+      });
+      document.getElementById(`${viewName}-view`).classList.add('active');
+    });
+  });
+
+  // Initialize
+  renderClientCards();
+</script>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!-- templates/apps/notepad.html -->
+<div class="window-content">
+    <div class="notepad-container">
+        <div class="notepad-toolbar">
+            <div class="toolbar-group">
+                <button class="toolbar-btn" id="newBtn"><i class="fas fa-file"></i></button>
+                <button class="toolbar-btn" id="openBtn"><i class="fas fa-folder-open"></i></button>
+                <button class="toolbar-btn" id="saveBtn"><i class="fas fa-save"></i></button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" id="cutBtn"><i class="fas fa-cut"></i></button>
+                <button class="toolbar-btn" id="copyBtn"><i class="fas fa-copy"></i></button>
+                <button class="toolbar-btn" id="pasteBtn"><i class="fas fa-paste"></i></button>
+            </div>
+            <div class="toolbar-group">
+                <button class="toolbar-btn" id="undoBtn"><i class="fas fa-undo"></i></button>
+                <button class="toolbar-btn" id="redoBtn"><i class="fas fa-redo"></i></button>
+            </div>
+        </div>
+        <textarea class="notepad-textarea" placeholder="Start typing..."></textarea>
+    </div>
+</div>
+
+<style>
+    .notepad-container {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+    
+    .notepad-toolbar {
+        display: flex;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 8px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .toolbar-group {
+        display: flex;
+        margin-right: 16px;
+    }
+    
+    .toolbar-btn {
+        width: 32px;
+        height: 32px;
+        background: transparent;
+        border: none;
+        color: white;
+        cursor: pointer;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 4px;
+        transition: background 0.2s;
+    }
+    
+    .toolbar-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .notepad-textarea {
+        flex: 1;
+        background: transparent;
+        border: none;
+        color: white;
+        padding: 16px;
+        font-family: 'Consolas', monospace;
+        font-size: 14px;
+        resize: none;
+        outline: none;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const textarea = document.querySelector('.notepad-textarea');
+        const newBtn = document.getElementById('newBtn');
+        const openBtn = document.getElementById('openBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const cutBtn = document.getElementById('cutBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const pasteBtn = document.getElementById('pasteBtn');
+        const undoBtn = document.getElementById('undoBtn');
+        const redoBtn = document.getElementById('redoBtn');
+        
+        newBtn.addEventListener('click', function() {
+            if (textarea.value && confirm('Are you sure you want to create a new document? Unsaved changes will be lost.')) {
+                textarea.value = '';
+            }
+        });
+        
+        openBtn.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'text/plain';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    textarea.value = event.target.result;
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        });
+        
+        saveBtn.addEventListener('click', function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'text/plain';
+            input.nwsaveas = 'untitled.txt';
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                const url = URL.createObjectURL(file);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name;
+                a.click();
+            };
+            input.click();
+        });
+        
+        cutBtn.addEventListener('click', function() {
+            document.execCommand('cut');
+        });
+        
+        copyBtn.addEventListener('click', function() {
+            document.execCommand('copy');
+        });
+        
+        pasteBtn.addEventListener('click', function() {
+            document.execCommand('paste');
+        });
+        
+        undoBtn.addEventListener('click', function() {
+            document.execCommand('undo');
+        });
+        
+        redoBtn.addEventListener('click', function() {
+            document.execCommand('redo');
+        });
+    });
+</script>

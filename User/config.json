@@ -1,0 +1,97 @@
+{
+    "apps": [
+        {
+            "id": "this-pc",
+            "name": "This PC",
+            "icon": "fas fa-desktop",
+            "pinned": true,
+            "desktop": true,
+            "type": "system",
+            "template": "thispc.html"
+        },
+        {
+            "id": "recycle-bin",
+            "name": "Recycle Bin",
+            "icon": "fas fa-trash",
+            "pinned": true,
+            "desktop": true,
+            "type": "system"
+        },
+        {
+            "id": "documents",
+            "name": "Documents",
+            "icon": "fas fa-folder",
+            "pinned": true,
+            "desktop": true,
+            "type": "folder"
+        },
+        {
+            "id": "edge",
+            "name": "Edge",
+            "icon": "fas fa-globe",
+            "pinned": true,
+            "desktop": false,
+            "type": "application",
+            "template": "browser.html"
+        },
+        {
+            "id": "file-explorer",
+            "name": "File Explorer",
+            "icon": "fas fa-folder-open",
+            "pinned": true,
+            "desktop": false,
+            "type": "application"
+        },
+        {
+            "id": "settings",
+            "name": "Settings",
+            "icon": "fas fa-cog",
+            "pinned": true,
+            "desktop": false,
+            "type": "application",
+            "template": "settings.html"
+        },
+        {
+            "id": "store",
+            "name": "Microsoft Store",
+            "icon": "fas fa-shopping-bag",
+            "pinned": true,
+            "desktop": false,
+            "type": "application"
+        },
+        {
+            "id": "photos",
+            "name": "Photos",
+            "icon": "fas fa-images",
+            "pinned": false,
+            "desktop": false,
+            "type": "application"
+        },
+        {
+            "id": "notepad",
+            "name": "Notepad",
+            "icon": "fas fa-file-alt",
+            "pinned": true,
+            "desktop": true,
+            "type": "application",
+            "template": "notepad.html"
+        }
+    ],
+    "recent_files": [
+        {
+            "name": "Project Report.docx",
+            "icon": "fas fa-file-word",
+            "time": "2 hours ago"
+        },
+        {
+            "name": "Sales Data.xlsx",
+            "icon": "fas fa-file-excel",
+            "time": "5 hours ago"
+        },
+        {
+            "name": "Vacation Photos",
+            "icon": "fas fa-images",
+            "time": "Yesterday"
+        }
+    ]
+}

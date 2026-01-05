@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 11</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .wallpaper {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 50%, rgba(59, 130, 246, 0.15), transparent 50%),
+                        radial-gradient(circle at 70% 50%, rgba(139, 92, 246, 0.15), transparent 50%);
+            z-index: 0;
+        }
+
+        /* Overlay for when windows are open */
+        .desktop-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 48px;
+            background: rgba(0, 0, 0, 0);
+            pointer-events: none;
+            transition: background 0.3s ease;
+            z-index: 500;
+        }
+
+        .desktop-overlay.active {
+            background: rgba(0, 0, 0, 0.1); /* Reduced opacity from 0.3 to 0.1 */
+        }
+
+        .desktop {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 48px);
+            padding: 20px;
+            z-index: 1;
+        }
+
+        .desktop-icons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .desktop-icon {
+            width: 80px;
+            text-align: center;
+            color: white;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .desktop-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .desktop-icon.selected {
+            background: rgba(59, 130, 246, 0.3);
+            border: 1px solid rgba(59, 130, 246, 0.5);
+        }
+
+        .icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .icon-label {
+            font-size: 12px;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+            word-wrap: break-word;
+        }
+
+        .context-menu {
+            position: fixed;
+            background: rgba(40, 40, 40, 0.95);
+            backdrop-filter: blur(30px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            padding: 4px;
+            min-width: 200px;
+            z-index: 10000;
+            display: none;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .context-menu-separator {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 4px 0;
+        }
+
+        .taskbar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(30, 30, 30, 0.7);
+            backdrop-filter: blur(30px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 9999;
+        }
+
+        .taskbar-center {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        .taskbar-right {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 8px;
+        }
+
+        .start-button {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 18px;
+            color: white;
+        }
+
+        .start-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .taskbar-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            font-size: 16px;
+            color: white;
+            position: relative;
+        }
+
+        .taskbar-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .taskbar-icon.active::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 3px;
+            background: #3b82f6;
+            border-radius: 2px;
+        }
+
+        .system-tray {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .tray-icon {
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .tray-icon:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .clock {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            padding: 4px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .clock:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .time {
+            font-weight: 500;
+        }
+
+        .date {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        /* New Start Menu Design */
+        .start-menu {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 600px;
+            background: linear-gradient(145deg, rgba(25, 25, 35, 0.98), rgba(15, 15, 25, 0.98));
+            backdrop-filter: blur(40px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), 
+                        0 0 0 1px rgba(255, 255, 255, 0.05),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            display: none;
+            overflow: hidden;
+            z-index: 10000;
+        }
+
+        .start-menu.active {
+            display: flex;
+            animation: slideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0) scale(1);
+            }
+        }
+
+        .start-menu-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: linear-gradient(90deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            display: flex;
+            flex-direction: column;
+        }
+
+        .search-container {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .search-box {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            color: white;
+            font-size: 15px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-box:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(59, 130, 246, 0.5);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+        }
+
+        .search-box::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 16px;
+        }
+
+        /* Add styles for the pinned apps list */
+        .pinned-apps-list {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+
+        .pinned-app-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 80px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .pinned-app-item:hover {
+            transform: translateY(-3px);
+        }
+
+        .pinned-app-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: white;
+            margin-bottom: 8px;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .pinned-app-name {
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .start-menu-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .apps-sidebar {
+            width: 200px;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-section {
+            margin-bottom: 25px;
+        }
+
+        .sidebar-title {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            transform: translateX(5px);
+        }
+
+        .sidebar-item i {
+            width: 20px;
+            text-align: center;
+            font-size: 16px;
+        }
+
+        .apps-main {
+            flex: 1;
+            padding: 25px;
+            overflow-y: auto;
+        }
+
+        .apps-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 20px;
+        }
+
+        .app-card {
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3),
+                        0 0 20px rgba(59, 130, 246, 0.2);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        .app-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            color: white;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+            box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .app-name {
+            color: white;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 500;
+            position: relative;
+            z-index: 1;
+        }
+
+        .recent-section {
+            padding: 20px 25px;
+            background: rgba(0, 0, 0, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .recent-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .recent-title {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .recent-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+        }
+
+        .recent-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .recent-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+
+        .recent-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 16px;
+        }
+
+        .recent-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .recent-name {
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .recent-time {
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 11px;
+            margin-top: 2px;
+        }
+
+        /* Update start-menu-footer to position user and power buttons on the right */
+        .start-menu-footer {
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.25);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .user-profile:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+        }
+
+        .user-name {
+            color: white;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .power-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .power-btn {
+            width: 36px;
+            height: 36px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 14px;
+        }
+
+        .power-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .power-btn.shutdown:hover {
+            background: rgba(231, 76, 60, 0.2);
+            color: #e74c3c;
+        }
+
+        .window {
+            position: absolute;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            min-width: 600px;
+            min-height: 400px;
+            display: none;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        .window.active {
+            display: flex;
+        }
+
+        .window.minimized {
+            display: none;
+        }
+
+        .window.maximized {
+            top: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: calc(100% - 48px) !important;
+            border-radius: 0 !important;
+            transform: none !important;
+        }
+
+        .window-header {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            cursor: move;
+            user-select: none;
+        }
+
+        .window-title {
+            color: white;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .window-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .window-control-btn {
+            width: 32px;
+            height: 32px;
+            border: none;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .window-control-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .window-control-btn.close:hover {
+            background: #e81123;
+        }
+
+        .window-content {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            color: white;
+        }
+
+        .drive-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .drive-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .drive-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            margin-right: 16px;
+        }
+
+        .drive-info {
+            flex: 1;
+        }
+
+        .drive-name {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .drive-space {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .notification {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            padding: 16px;
+            color: white;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 10000;
+            transform: translateX(120%);
+            transition: transform 0.3s ease-out;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 14px;
+            opacity: 0.9;
+        }   
+
+        #taskbarApps {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* System Modal Styles */
+        .system-modal {
+            position: fixed;
+            bottom: 60px;
+            right: 20px;
+            width: 360px;
+            background: rgba(30, 30, 30, 0.95);
+            backdrop-filter: blur(40px);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            display: none;
+            flex-direction: column;
+            z-index: 10000;
+            overflow: hidden;
+        }
+
+        .system-modal.active {
+            display: flex;
+            animation: slideUp 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .system-modal-header {
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .system-modal-title {
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .system-modal-close {
+            width: 32px;
+            height: 32px;
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+
+        .system-modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .system-modal-content {
+            padding: 20px;
+            color: white;
+        }
+
+        /* WiFi Modal Styles */
+        .wifi-toggle {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .toggle-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .toggle-switch {
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: #3b82f6;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            transform: translateX(20px);
+        }
+
+        .wifi-networks {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .wifi-network {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .wifi-network:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .wifi-network.connected {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .wifi-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .wifi-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .wifi-status {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .wifi-signal {
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Battery Modal Styles */
+        .battery-status {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+        }
+
+        .battery-icon {
+            font-size: 32px;
+            color: #3b82f6;
+        }
+
+        .battery-percentage {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .battery-info {
+            margin-bottom: 20px;
+        }
+
+        .battery-remaining {
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .battery-mode {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .battery-settings {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .battery-setting {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .setting-label {
+            font-size: 14px;
+        }
+
+        .power-mode-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            color: white;
+            padding: 6px 10px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        /* Time Modal Styles */
+        .time-display {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .current-time {
+            font-size: 36px;
+            font-weight: 300;
+            margin-bottom: 4px;
+        }
+
+        .current-date {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .time-zones {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .time-zone {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .zone-name {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .zone-time {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .time-settings {
+            display: flex;
+            justify-content: center;
+        }
+
+        .time-settings-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .time-settings-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+    </style>
+</head>
+<body>
+    <div class="wallpaper"></div>
+    <div class="desktop-overlay" id="desktopOverlay"></div>
+    
+    <div class="desktop">
+        <div class="desktop-icons-container" id="desktopIcons"></div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" data-action="refresh">
+            <i class="fas fa-sync"></i>
+            <span>Refresh</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="view">
+            <i class="fas fa-eye"></i>
+            <span>View</span>
+        </div>
+        <div class="context-menu-item" data-action="sort">
+            <i class="fas fa-sort"></i>
+            <span>Sort by</span>
+        </div>
+        <div class="context-menu-separator"></div>
+        <div class="context-menu-item" data-action="personalize">
+            <i class="fas fa-palette"></i>
+            <span>Personalize</span>
+        </div>
+        <div class="context-menu-item" data-action="display">
+            <i class="fas fa-desktop"></i>
+            <span>Display settings</span>
+        </div>
+    </div>
+
+    <div class="taskbar">
+        <div class="taskbar-center">
+            <button class="start-button" id="startBtn">
+                <i class="fab fa-windows"></i>
+            </button>
+            <div id="taskbarApps"></div>
+        </div>
+
+        <div class="taskbar-right">
+            <div class="system-tray">
+                <span class="tray-icon"><i class="fas fa-volume-up"></i></span>
+                <span class="tray-icon"><i class="fas fa-wifi"></i></span>
+                <span class="tray-icon"><i class="fas fa-battery-three-quarters"></i></span>
+            </div>
+            <div class="clock" id="clock">
+                <div class="time"></div>
+                <div class="date"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- New Start Menu Design -->
+    <div class="start-menu" id="startMenu">
+        <div class="start-menu-header">
+            <div class="search-container">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-box" placeholder="Search apps, files, and settings">
+            </div>
+            <div class="pinned-apps-list" id="pinnedAppsList"></div>
+        </div>
+
+        <div class="start-menu-content">
+            <div class="apps-sidebar">
+                <div class="sidebar-section">
+                    <div class="sidebar-title">Quick Access</div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-home"></i>
+                        <span>Home</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-file"></i>
+                        <span>Documents</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-images"></i>
+                        <span>Pictures</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-download"></i>
+                        <span>Downloads</span>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <div class="sidebar-title">System</div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-cog"></i>
+                        <span>Settings</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Security</span>
+                    </div>
+                    <div class="sidebar-item">
+                        <i class="fas fa-update"></i>
+                        <span>Updates</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="apps-main">
+                <div class="apps-container" id="appsContainer"></div>
+            </div>
+        </div>
+
+        <div class="recent-section">
+            <div class="recent-header">
+                <div class="recent-title">Recently Used</div>
+                <button style="background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; font-size: 12px; position: absolute; right: 0;">Clear All</button>
+            </div>
+            <div class="recent-grid" id="recentFiles"></div>
+        </div>
+
+        <div class="start-menu-footer">
+            <div class="user-profile">
+                <div class="user-avatar"><i class="fas fa-user"></i></div>
+                <div class="user-name">User</div>
+            </div>
+            <div class="power-controls">
+                <button class="power-btn"><i class="fas fa-lock"></i></button>
+                <button class="power-btn"><i class="fas fa-sign-out-alt"></i></button>
+                <button class="power-btn shutdown"><i class="fas fa-power-off"></i></button>
+            </div>
+        </div>
+    </div>
+
+    <!-- System Modals -->
+    <!-- WiFi Modal -->
+    <div class="system-modal" id="wifiModal">
+        <div class="system-modal-header">
+            <div class="system-modal-title">Wi-Fi</div>
+            <button class="system-modal-close" data-modal="wifiModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="system-modal-content">
+            <div class="wifi-toggle">
+                <div class="toggle-label">Wi-Fi</div>
+                <div class="toggle-switch active" id="wifiToggle">
+                    <div class="toggle-slider"></div>
+                </div>
+            </div>
+            <div class="wifi-networks">
+                <div class="wifi-network connected">
+                    <div class="wifi-info">
+                        <div class="wifi-name">HomeNetwork</div>
+                        <div class="wifi-status">Connected</div>
+                    </div>
+                    <div class="wifi-signal">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                </div>
+                <div class="wifi-network">
+                    <div class="wifi-info">
+                        <div class="wifi-name">CoffeeShop</div>
+                        <div class="wifi-status">Secured</div>
+                    </div>
+                    <div class="wifi-signal">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                </div>
+                <div class="wifi-network">
+                    <div class="wifi-info">
+                        <div class="wifi-name">Office</div>
+                        <div class="wifi-status">Secured</div>
+                    </div>
+                    <div class="wifi-signal">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Battery Modal -->
+    <div class="system-modal" id="batteryModal">
+        <div class="system-modal-header">
+            <div class="system-modal-title">Battery</div>
+            <button class="system-modal-close" data-modal="batteryModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="system-modal-content">
+            <div class="battery-status">
+                <div class="battery-icon">
+                    <i class="fas fa-battery-three-quarters"></i>
+                </div>
+                <div class="battery-percentage">75%</div>
+            </div>
+            <div class="battery-info">
+                <div class="battery-remaining">2 hours 15 minutes remaining</div>
+                <div class="battery-mode">Best performance</div>
+            </div>
+            <div class="battery-settings">
+                <div class="battery-setting">
+                    <div class="setting-label">Battery saver</div>
+                    <div class="toggle-switch" id="batterySaverToggle">
+                        <div class="toggle-slider"></div>
+                    </div>
+                </div>
+                <div class="battery-setting">
+                    <div class="setting-label">Power mode</div>
+                    <select class="power-mode-select">
+                        <option>Best performance</option>
+                        <option>Better performance</option>
+                        <option>Better battery</option>
+                        <option>Battery saver</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Time/Date Modal -->
+    <div class="system-modal" id="timeModal">
+        <div class="system-modal-header">
+            <div class="system-modal-title">Date & Time</div>
+            <button class="system-modal-close" data-modal="timeModal">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="system-modal-content">
+            <div class="time-display">
+                <div class="current-time" id="modalTime">10:30 AM</div>
+                <div class="current-date" id="modalDate">Monday, June 12, 2023</div>
+            </div>
+            <div class="time-zones">
+                <div class="time-zone">
+                    <div class="zone-name">Local Time</div>
+                    <div class="zone-time" id="localTime">10:30 AM</div>
+                </div>
+                <div class="time-zone">
+                    <div class="zone-name">UTC</div>
+                    <div class="zone-time" id="utcTime">2:30 PM</div>
+                </div>
+                <div class="time-zone">
+                    <div class="zone-name">Tokyo</div>
+                    <div class="zone-time" id="tokyoTime">11:30 PM</div>
+                </div>
+            </div>
+            <div class="time-settings">
+                <button class="time-settings-btn">
+                    <i class="fas fa-cog"></i>
+                    Date & time settings
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <div class="notification-title"></div>
+        <div class="notification-message"></div>
+    </div>
+
+    <script>
+        let config = {};
+        let activeWindows = {};
+        let windowZIndex = 1000;
+        let minimizedWindows = {};
+        let currentCategory = 'all';
+
+        // Load configuration from backend
+        async function loadConfig() {
+            try {
+                const response = await fetch('/api/config');
+                if (!response.ok) {
+                    throw new Error('Failed to load configuration');
+                }
+                config = await response.json();
+                renderDesktopIcons();
+                renderApps();
+                renderPinnedAppsList();
+                renderTaskbarApps();
+                renderRecentFiles();
+            } catch (error) {
+                console.error('Error loading configuration:', error);
+                showNotification('Error', 'Failed to load configuration');
+            }
+        }
+
+        function renderDesktopIcons() {
+            const container = document.getElementById('desktopIcons');
+            container.innerHTML = '';
+            
+            const desktopApps = config.apps.filter(app => app.desktop);
+            desktopApps.forEach(app => {
+                const iconDiv = document.createElement('div');
+                iconDiv.className = 'desktop-icon';
+                iconDiv.dataset.appId = app.id;
+                iconDiv.innerHTML = `
+                    <div class="icon">
+                        <i class="${app.icon}"></i>
+                    </div>
+                    <div class="icon-label">${app.name}</div>
+                `;
+                iconDiv.addEventListener('dblclick', () => openApp(app));
+                iconDiv.addEventListener('click', (e) => {
+                    document.querySelectorAll('.desktop-icon').forEach(icon => {
+                        icon.classList.remove('selected');
+                    });
+                    iconDiv.classList.add('selected');
+                });
+                container.appendChild(iconDiv);
+            });
+        }
+
+        function renderPinnedAppsList() {
+            const container = document.getElementById('pinnedAppsList');
+            container.innerHTML = '';
+            
+            const pinnedApps = config.apps.filter(app => app.pinned);
+            pinnedApps.forEach(app => {
+                const appItem = document.createElement('div');
+                appItem.className = 'pinned-app-item';
+                appItem.innerHTML = `
+                    <div class="pinned-app-icon">
+                        <i class="${app.icon}"></i>
+                    </div>
+                    <div class="pinned-app-name">${app.name}</div>
+                `;
+                appItem.addEventListener('click', () => {
+                    openApp(app);
+                    document.getElementById('startMenu').classList.remove('active');
+                });
+                container.appendChild(appItem);
+            });
+        }
+
+        function renderApps() {
+            const container = document.getElementById('appsContainer');
+            container.innerHTML = '';
+            
+            // Show all apps by default
+            let appsToShow = config.apps;
+            
+            // Filter by category if needed
+            if (currentCategory === 'recent') {
+                appsToShow = config.apps.filter(app => app.recent);
+            } else if (currentCategory === 'system') {
+                appsToShow = config.apps.filter(app => app.type === 'system');
+            } else if (currentCategory === 'media') {
+                appsToShow = config.apps.filter(app => app.type === 'media');
+            }
+            
+            appsToShow.forEach(app => {
+                const appCard = document.createElement('div');
+                appCard.className = 'app-card';
+                appCard.innerHTML = `
+                    <div class="app-icon">
+                        <i class="${app.icon}"></i>
+                    </div>
+                    <div class="app-name">${app.name}</div>
+                `;
+                appCard.addEventListener('click', () => {
+                    openApp(app);
+                    document.getElementById('startMenu').classList.remove('active');
+                });
+                container.appendChild(appCard);
+            });
+        }
+
+        function renderTaskbarApps() {
+            const container = document.getElementById('taskbarApps');
+            container.innerHTML = '';
+            
+            // First, show all pinned apps
+            const pinnedApps = config.apps.filter(app => app.pinned);
+            pinnedApps.forEach(app => {
+                const button = document.createElement('button');
+                button.className = 'taskbar-icon';
+                button.dataset.appId = app.id;
+                button.innerHTML = `<i class="${app.icon}"></i>`;
+                
+                // Check if this app has an active window
+                if (activeWindows[app.id] && !minimizedWindows[app.id]) {
+                    button.classList.add('active');
+                }
+                
+                button.addEventListener('click', () => {
+                    if (activeWindows[app.id]) {
+                        if (minimizedWindows[app.id]) {
+                            restoreWindow(app.id);
+                        } else {
+                            const windowEl = document.getElementById(activeWindows[app.id]);
+                            if (windowEl && parseInt(windowEl.style.zIndex) === windowZIndex - 1) {
+                                minimizeWindow(app.id);
+                            } else {
+                                bringToFront(app.id);
+                            }
+                        }
+                    } else {
+                        openApp(app);
+                    }
+                });
+                container.appendChild(button);
+            });
+            
+            // Then, show apps with active windows that aren't pinned
+            Object.keys(activeWindows).forEach(appId => {
+                const app = config.apps.find(a => a.id === appId);
+                if (app && !app.pinned) {
+                    const button = document.createElement('button');
+                    button.className = 'taskbar-icon';
+                    button.dataset.appId = app.id;
+                    button.innerHTML = `<i class="${app.icon}"></i>`;
+                    
+                    if (!minimizedWindows[app.id]) {
+                        button.classList.add('active');
+                    }
+                    
+                    button.addEventListener('click', () => {
+                        if (minimizedWindows[app.id]) {
+                            restoreWindow(app.id);
+                        } else {
+                            const windowEl = document.getElementById(activeWindows[app.id]);
+                            if (windowEl && parseInt(windowEl.style.zIndex) === windowZIndex - 1) {
+                                minimizeWindow(app.id);
+                            } else {
+                                bringToFront(app.id);
+                            }
+                        }
+                    });
+                    container.appendChild(button);
+                }
+            });
+        }
+
+        function renderRecentFiles() {
+            const container = document.getElementById('recentFiles');
+            container.innerHTML = '';
+            
+            config.recent_files.forEach(file => {
+                const fileDiv = document.createElement('div');
+                fileDiv.className = 'recent-item';
+                fileDiv.innerHTML = `
+                    <div class="recent-icon">
+                        <i class="${file.icon}"></i>
+                    </div>
+                    <div class="recent-info">
+                        <div class="recent-name">${file.name}</div>
+                        <div class="recent-time">${file.time}</div>
+                    </div>
+                `;
+                container.appendChild(fileDiv);
+            });
+        }
+
+        function updateOverlay() {
+            const overlay = document.getElementById('desktopOverlay');
+            const hasActiveWindows = Object.keys(activeWindows).some(appId => !minimizedWindows[appId]);
+            
+            if (hasActiveWindows) {
+                overlay.classList.add('active');
+            } else {
+                overlay.classList.remove('active');
+            }
+        }
+
+        async function openApp(app) {
+            // If window is already open, just bring it to front
+            if (activeWindows[app.id]) {
+                if (minimizedWindows[app.id]) {
+                    restoreWindow(app.id);
+                } else {
+                    bringToFront(app.id);
+                }
+                return;
+            }
+
+            // Create a new window for the app
+            const windowId = `window-${app.id}`;
+            const windowElement = document.createElement('div');
+            windowElement.className = 'window';
+            windowElement.id = windowId;
+            windowElement.style.zIndex = windowZIndex++;
+            
+            // Load the app template
+            try {
+                const response = await fetch(`/app/${app.id}`);
+                if (!response.ok) {
+                    throw new Error('Failed to load app template');
+                }
+                const template = await response.text();
+                
+                windowElement.innerHTML = `
+                    <div class="window-header">
+                        <div class="window-title">
+                            <i class="${app.icon}"></i>
+                            <span>${app.name}</span>
+                        </div>
+                        <div class="window-controls">
+                            <button class="window-control-btn minimize" data-app-id="${app.id}"><i class="fas fa-minus"></i></button>
+                            <button class="window-control-btn maximize" data-app-id="${app.id}"><i class="fas fa-square"></i></button>
+                            <button class="window-control-btn close" data-app-id="${app.id}"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="window-content">
+                        ${template}
+                    </div>
+                `;
+                
+                document.body.appendChild(windowElement);
+                
+                // Make the window draggable
+                makeWindowDraggable(windowElement);
+                
+                // Set up window controls
+                setupWindowControls(windowElement, app);
+                
+                // Show the window
+                windowElement.classList.add('active');
+                
+                // Center the window
+                centerWindow(windowElement);
+                
+                // Track this window
+                activeWindows[app.id] = windowId;
+                
+                // Update taskbar
+                renderTaskbarApps();
+                updateOverlay();
+                
+            } catch (error) {
+                console.error('Error opening app:', error);
+                showNotification('Error', `Failed to open ${app.name}`);
+            }
+        }
+
+        function setupWindowControls(windowElement, app) {
+            const minimizeBtn = windowElement.querySelector('.window-control-btn.minimize');
+            const maximizeBtn = windowElement.querySelector('.window-control-btn.maximize');
+            const closeBtn = windowElement.querySelector('.window-control-btn.close');
+            
+            minimizeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                minimizeWindow(app.id);
+            });
+            maximizeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMaximizeWindow(app.id);
+            });
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                closeWindow(app.id);
+            });
+
+            windowElement.addEventListener('mousedown', () => {
+                bringToFront(app.id);
+            });
+        }
+
+        function minimizeWindow(appId) {
+            const windowId = activeWindows[appId];
+            const windowElement = document.getElementById(windowId);
+            
+            if (windowElement) {
+                windowElement.classList.remove('active');
+                windowElement.classList.add('minimized');
+                minimizedWindows[appId] = true;
+                renderTaskbarApps();
+                updateOverlay();
+            }
+        }
+
+        function restoreWindow(appId) {
+            const windowId = activeWindows[appId];
+            const windowElement = document.getElementById(windowId);
+            
+            if (windowElement) {
+                windowElement.classList.remove('minimized');
+                windowElement.classList.add('active');
+                delete minimizedWindows[appId];
+                bringToFront(appId);
+                renderTaskbarApps();
+                updateOverlay();
+            }
+        }
+
+        function toggleMaximizeWindow(appId) {
+            const windowId = activeWindows[appId];
+            const windowElement = document.getElementById(windowId);
+            
+            if (windowElement) {
+                if (windowElement.classList.contains('maximized')) {
+                    windowElement.classList.remove('maximized');
+                    if (windowElement.dataset.previousWidth) {
+                        windowElement.style.width = windowElement.dataset.previousWidth;
+                        windowElement.style.height = windowElement.dataset.previousHeight;
+                        windowElement.style.left = windowElement.dataset.previousLeft;
+                        windowElement.style.top = windowElement.dataset.previousTop;
+                    }
+                } else {
+                    windowElement.dataset.previousWidth = windowElement.style.width;
+                    windowElement.dataset.previousHeight = windowElement.style.height;
+                    windowElement.dataset.previousLeft = windowElement.style.left;
+                    windowElement.dataset.previousTop = windowElement.style.top;
+                    
+                    windowElement.classList.add('maximized');
+                }
+            }
+        }
+
+        function closeWindow(appId) {
+            const windowId = activeWindows[appId];
+            const windowElement = document.getElementById(windowId);
+            
+            if (windowElement) {
+                windowElement.remove();
+                delete activeWindows[appId];
+                delete minimizedWindows[appId];
+                renderTaskbarApps();
+                updateOverlay();
+            }
+        }
+
+        function bringToFront(appId) {
+            const windowId = activeWindows[appId];
+            const windowElement = document.getElementById(windowId);
+            
+            if (windowElement) {
+                windowElement.style.zIndex = windowZIndex++;
+            }
+        }
+
+        function centerWindow(windowElement) {
+            const width = 700;
+            const height = 500;
+            windowElement.style.width = width + 'px';
+            windowElement.style.height = height + 'px';
+            
+            const left = (window.innerWidth - width) / 2;
+            const top = (window.innerHeight - height - 48) / 2;
+            windowElement.style.left = left + 'px';
+            windowElement.style.top = top + 'px';
+        }
+
+        function makeWindowDraggable(windowElement) {
+            const header = windowElement.querySelector('.window-header');
+            let isDragging = false;
+            let startX, startY, startLeft, startTop;
+
+            header.addEventListener('mousedown', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                if (windowElement.classList.contains('maximized')) return;
+                
+                isDragging = true;
+                startX = e.clientX;
+                startY = e.clientY;
+                
+                const rect = windowElement.getBoundingClientRect();
+                startLeft = rect.left;
+                startTop = rect.top;
+                
+                windowElement.style.transform = 'none';
+                
+                e.preventDefault();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const deltaX = e.clientX - startX;
+                const deltaY = e.clientY - startY;
+                
+                windowElement.style.left = (startLeft + deltaX) + 'px';
+                windowElement.style.top = (startTop + deltaY) + 'px';
+            });
+
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                }
+            });
+
+            header.addEventListener('dblclick', (e) => {
+                if (e.target.closest('.window-controls')) return;
+                const appId = header.querySelector('.window-control-btn').dataset.appId;
+                toggleMaximizeWindow(appId);
+            });
+        }
+
+        function showNotification(title, message) {
+            const notification = document.getElementById('notification');
+            const titleElement = notification.querySelector('.notification-title');
+            const messageElement = notification.querySelector('.notification-message');
+            
+            titleElement.textContent = title;
+            messageElement.textContent = message;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true 
+            });
+            const dateStr = now.toLocaleDateString('en-US', { 
+                month: '2-digit', 
+                day: '2-digit', 
+                year: 'numeric' 
+            });
+            
+            document.querySelector('.clock .time').textContent = timeStr;
+            document.querySelector('.clock .date').textContent = dateStr;
+            
+            // Update modal time displays
+            document.getElementById('modalTime').textContent = timeStr;
+            document.getElementById('modalDate').textContent = now.toLocaleDateString('en-US', { 
+                weekday: 'long',
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            
+            // Update time zones
+            document.getElementById('localTime').textContent = timeStr;
+            document.getElementById('utcTime').textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'UTC'
+            });
+            document.getElementById('tokyoTime').textContent = now.toLocaleTimeString('en-US', { 
+                hour: '2-digit', 
+                minute: '2-digit',
+                hour12: true,
+                timeZone: 'Asia/Tokyo'
+            });
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+
+        // Start menu functionality
+        const startBtn = document.getElementById('startBtn');
+        const startMenu = document.getElementById('startMenu');
+
+        startBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            startMenu.classList.toggle('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!startMenu.contains(e.target) && e.target !== startBtn) {
+                startMenu.classList.remove('active');
+            }
+        });
+
+        startMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Sidebar items functionality
+        document.querySelectorAll('.sidebar-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const itemName = item.querySelector('span').textContent;
+                showNotification('Navigation', `Opening ${itemName}...`);
+            });
+        });
+
+        // Power buttons functionality
+        document.querySelector('.power-btn.shutdown').addEventListener('click', () => {
+            if (confirm('Are you sure you want to shut down?')) {
+                showNotification('Shutting Down', 'System is shutting down...');
+            }
+        });
+
+        document.querySelectorAll('.power-btn:not(.shutdown)').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const action = btn.querySelector('i').classList.contains('fa-lock') ? 'Lock' : 'Sign Out';
+                showNotification(action, `${action} action would be performed here`);
+            });
+        });
+
+        const contextMenu = document.getElementById('contextMenu');
+
+        document.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+            
+            if (e.target.closest('.desktop-icon')) {
+                return;
+            }
+            
+            if (e.target.closest('.window') || 
+                e.target.closest('.taskbar') ||
+                e.target.closest('.start-menu')) {
+                return;
+            }
+
+            contextMenu.style.left = e.pageX + 'px';
+            contextMenu.style.top = e.pageY + 'px';
+            contextMenu.classList.add('active');
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!contextMenu.contains(e.target)) {
+                contextMenu.classList.remove('active');
+            }
+        });
+
+        contextMenu.addEventListener('click', (e) => {
+            const item = e.target.closest('.context-menu-item');
+            if (item) {
+                const action = item.dataset.action;
+                handleContextMenuAction(action);
+                contextMenu.classList.remove('active');
+            }
+        });
+
+        function handleContextMenuAction(action) {
+            switch(action) {
+                case 'refresh':
+                    loadConfig();
+                    showNotification('Refresh', 'Desktop refreshed');
+                    break;
+                case 'view':
+                    showNotification('View', 'View options');
+                    break;
+                case 'sort':
+                    showNotification('Sort', 'Sort options');
+                    break;
+                case 'personalize':
+                    showNotification('Personalize', 'Personalization settings');
+                    break;
+                case 'display':
+                    showNotification('Display', 'Display settings');
+                    break;
+            }
+        }
+
+        // System tray modals
+        document.querySelectorAll('.tray-icon').forEach(icon => {
+            icon.addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                // Close all modals first
+                document.querySelectorAll('.system-modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+                
+                // Determine which modal to open based on the icon
+                if (icon.querySelector('.fa-volume-up')) {
+                    // Volume modal (not implemented in this example)
+                    showNotification('Volume', 'Volume controls would be shown here');
+                } else if (icon.querySelector('.fa-wifi')) {
+                    document.getElementById('wifiModal').classList.add('active');
+                } else if (icon.querySelector('.fa-battery-three-quarters')) {
+                    document.getElementById('batteryModal').classList.add('active');
+                }
+            });
+        });
+
+        // Clock modal
+        document.getElementById('clock').addEventListener('click', (e) => {
+            e.stopPropagation();
+            
+            // Close all modals first
+            document.querySelectorAll('.system-modal').forEach(modal => {
+                modal.classList.remove('active');
+            });
+            
+            // Update time in modal
+            updateClock();
+            
+            document.getElementById('timeModal').classList.add('active');
+        });
+
+        // Close modals when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.system-modal') && 
+                !e.target.closest('.tray-icon') && 
+                !e.target.closest('.clock')) {
+                document.querySelectorAll('.system-modal').forEach(modal => {
+                    modal.classList.remove('active');
+                });
+            }
+        });
+
+        // Modal close buttons
+        document.querySelectorAll('.system-modal-close').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const modalId = btn.dataset.modal;
+                document.getElementById(modalId).classList.remove('active');
+            });
+        });
+
+        // Toggle switches
+        document.getElementById('wifiToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            const isActive = this.classList.contains('active');
+            showNotification('Wi-Fi', isActive ? 'Wi-Fi enabled' : 'Wi-Fi disabled');
+        });
+
+        document.getElementById('batterySaverToggle').addEventListener('click', function() {
+            this.classList.toggle('active');
+            const isActive = this.classList.contains('active');
+            showNotification('Battery Saver', isActive ? 'Battery saver enabled' : 'Battery saver disabled');
+        });
+
+        // WiFi network selection
+        document.querySelectorAll('.wifi-network').forEach(network => {
+            network.addEventListener('click', function() {
+                document.querySelectorAll('.wifi-network').forEach(n => n.classList.remove('connected'));
+                this.classList.add('connected');
+                const networkName = this.querySelector('.wifi-name').textContent;
+                showNotification('Wi-Fi', `Connected to ${networkName}`);
+            });
+        });
+
+        // Initialize the application
+        loadConfig();
+    </script>
+</body>
+</html>

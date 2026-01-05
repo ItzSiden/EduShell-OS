@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings</title>
+    <style>
+        /* Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Roboto, sans-serif;
+        }
+
+        body {
+            background: #0d1117;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .window-content {
+            width: 90%;
+            max-width: 1000px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .window-header {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 12px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .window-header .close-btn {
+            cursor: pointer;
+            color: #ff4d4d;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .window-header .close-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* Main Container */
+        .settings-container {
+            display: flex;
+            flex: 1;
+            height: 100%;
+        }
+
+        /* Sidebar */
+        .settings-sidebar {
+            width: 220px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 16px 0;
+            overflow-y: auto;
+        }
+
+        .settings-category {
+            padding: 12px 24px;
+            color: white;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .settings-category:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .settings-category.active {
+            background: rgba(59, 130, 246, 0.2);
+            border-left: 3px solid #3b82f6;
+        }
+
+        /* Content */
+        .settings-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+
+        .settings-section {
+            margin-bottom: 32px;
+        }
+
+        .settings-section h3 {
+            color: white;
+            margin-bottom: 16px;
+            font-size: 18px;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .setting-label {
+            color: white;
+            font-size: 14px;
+        }
+
+        .setting-value {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        /* Toggle Button */
+        .toggle {
+            width: 44px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            position: relative;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .toggle.active {
+            background: #3b82f6;
+        }
+
+        .toggle::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        .toggle.active::after {
+            transform: translateX(20px);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="window-content">
+        <div class="window-header">
+            ⚙️ Settings
+            <div class="close-btn">✕</div>
+        </div>
+
+        <div class="settings-container">
+            <div class="settings-sidebar">
+                <div class="settings-category active">System</div>
+                <div class="settings-category">Devices</div>
+                <div class="settings-category">Network & Internet</div>
+                <div class="settings-category">Personalization</div>
+                <div class="settings-category">Apps</div>
+                <div class="settings-category">Accounts</div>
+                <div class="settings-category">Time & Language</div>
+                <div class="settings-category">Gaming</div>
+                <div class="settings-category">Ease of Access</div>
+                <div class="settings-category">Privacy</div>
+                <div class="settings-category">Update & Security</div>
+            </div>
+
+            <div class="settings-content">
+                <h2>System</h2>
+                <div class="settings-section">
+                    <h3>Display</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">Resolution</div>
+                        <div class="setting-value">1920 x 1080</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Orientation</div>
+                        <div class="setting-value">Landscape</div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Scale</div>
+                        <div class="setting-value">100%</div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Notifications</h3>
+                    <div class="setting-item">
+                        <div class="setting-label">Get notifications from apps</div>
+                        <div class="setting-value toggle active"></div>
+                    </div>
+                    <div class="setting-item">
+                        <div class="setting-label">Show notifications on lock screen</div>
+                        <div class="setting-value toggle"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Toggle switches
+        document.querySelectorAll('.toggle').forEach(toggle => {
+            toggle.addEventListener('click', () => {
+                toggle.classList.toggle('active');
+            });
+        });
+
+        // Category selection
+        const categories = document.querySelectorAll('.settings-category');
+        categories.forEach(cat => {
+            cat.addEventListener('click', () => {
+                categories.forEach(c => c.classList.remove('active'));
+                cat.classList.add('active');
+            });
+        });
+
+        // Close button (for demo)
+        document.querySelector('.close-btn').addEventListener('click', () => {
+            alert("Window closed 😴");
+        });
+    </script>
+</body>
+</html>
